@@ -23,15 +23,17 @@ type drone interface {
 }
 
 type ArdroneAdaptor struct {
-	name    string
-	drone   drone
-	connect func(*ArdroneAdaptor) (err error)
+	name      string
+	drone     drone
+	connected bool
+	connect   func(*ArdroneAdaptor) (err error)
 }
 
 // NewArdroneAdaptor creates a new ardrone and connects with default configuration
 func NewArdroneAdaptor(name string, v ...string) *ArdroneAdaptor {
 	return &ArdroneAdaptor{
-		name: name,
+		name:      name,
+		connected: false,
 		connect: func(a *ArdroneAdaptor) (err error) {
 			config := client.DefaultConfig()
 			if len(v) > 0 {
@@ -42,6 +44,7 @@ func NewArdroneAdaptor(name string, v ...string) *ArdroneAdaptor {
 				return
 			}
 			a.drone = d
+			a.connected = true
 			return
 		},
 	}
@@ -58,9 +61,16 @@ func (a *ArdroneAdaptor) Connect() (errs []error) {
 }
 
 func (a *ArdroneAdaptor) Disconnect() (errs []error) {
-	a.drone.(*client.Client).Disconnect()
+	a.connected = false
+	if err := a.drone.(*client.Client).Disconnect(); err != nil {
+		return []error{err}
+	}
 	return
 }
 
 // Finalize returns true when connection is finalized correctly
-func (a *ArdroneAdaptor) Finalize() (errs []error) { return }
+func (a *ArdroneAdaptor) Finalize() (errs []error) { return a.Disconnect() }
+
+func (a *ArdroneAdaptor) Connected() bool {
+	return a.connected
+}
