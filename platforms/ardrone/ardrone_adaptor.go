@@ -57,5 +57,10 @@ func (a *ArdroneAdaptor) Connect() (errs []error) {
 	return
 }
 
+func (a *ArdroneAdaptor) Disconnect() (errs []error) {
+	a.drone.(*client.Client).Disconnect()
+	return
+}
+
 // Finalize returns true when connection is finalized correctly
 func (a *ArdroneAdaptor) Finalize() (errs []error) { return }
